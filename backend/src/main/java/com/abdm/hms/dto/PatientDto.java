@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PatientDto {
+
     private Long patientId;
 
     @NotBlank
@@ -31,7 +32,10 @@ public class PatientDto {
     private LocalDate dateOfBirth;
 
     @NotBlank
-    @Pattern(regexp = "^[0-9+\\-\\s]{7,20}$", message = "must be a valid phone number")
+    @Pattern(
+        regexp = "^[0-9+\\-\\s]{7,20}$",
+        message = "must be a valid phone number"
+    )
     private String phoneNumber;
 
     @NotBlank
@@ -40,4 +44,7 @@ public class PatientDto {
 
     @Size(max = 30)
     private String abhaNumber;
+
+    // EHRbase EHR ID
+    private String ehrId;
 }

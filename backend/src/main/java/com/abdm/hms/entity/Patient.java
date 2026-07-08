@@ -47,6 +47,9 @@ public class Patient {
     @Column(unique = true, length = 30)
     private String abhaNumber;
 
+    @Column(name = "ehr_id", unique = true, length = 100)
+    private String ehrId;
+
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Appointment> appointments = new ArrayList<>();
