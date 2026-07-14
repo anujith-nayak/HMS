@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import { getPatients, createPatient, updatePatient, deletePatient } from '../api/patients'
+import { getPatients, createPatient, updatePatient, deletePatient, getPatientHistory } from '../api/patients'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Spinner from '../components/Spinner'
@@ -18,6 +18,7 @@ export default function Patients() {
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const [historyModal, setHistoryModal] = useState({ open: false, patient: null, data: null, loading: false })
 
   const load = useCallback((q = '') => {
     setLoading(true)
@@ -81,6 +82,17 @@ export default function Patients() {
     finally { setConfirm({ open: false }) }
   }
 
+  const openHistory = async (patient) => {
+    setHistoryModal({ open: true, patient, data: null, loading: true })
+    try {
+      const res = await getPatientHistory(patient.patientId)
+      setHistoryModal({ open: true, patient, data: res.data, loading: false })
+    } catch {
+      toast.error('Failed to load patient history')
+      setHistoryModal({ open: true, patient, data: null, loading: false })
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -127,6 +139,7 @@ export default function Patients() {
                     <td className="table-cell font-mono text-xs">{p.abhaNumber || '—'}</td>
                     <td className="table-cell">
                       <div className="flex gap-2">
+                        <button onClick={() => openHistory(p)} className="btn-secondary">History</button>
                         <button onClick={() => openEdit(p)} className="btn-edit">Edit</button>
                         <button onClick={() => setConfirm({ open: true, id: p.patientId })} className="btn-danger">Delete</button>
                       </div>
@@ -189,6 +202,16 @@ export default function Patients() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={historyModal.open} onClose={() => setHistoryModal({ open: false, patient: null, data: null, loading: false })} title={historyModal.patient ? `${historyModal.patient.fullName} - History` : 'Patient History'}>
+        {historyModal.loading ? (
+          <div className="flex justify-center py-8"><Spinner size="md" /></div>
+        ) : historyModal.data ? (
+          <pre className="text-sm whitespace-pre-wrap bg-slate-50 p-4 rounded-lg">{JSON.stringify(historyModal.data, null, 2)}</pre>
+        ) : (
+          <p className="text-sm text-slate-500">No history returned from EHRbase.</p>
+        )}
       </Modal>
 
       <ConfirmDialog open={confirm.open} onConfirm={handleDelete} onCancel={() => setConfirm({ open: false })} />

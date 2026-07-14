@@ -22,6 +22,7 @@ public class PrescriptionService {
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final EHRBaseService ehrBaseService;
 
     public List<PrescriptionDto> getAll(String search) {
         List<Prescription> list = StringUtils.hasText(search)
@@ -39,6 +40,12 @@ public class PrescriptionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", dto.getPatientId()));
         Doctor doctor = doctorRepository.findById(dto.getDoctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor", dto.getDoctorId()));
+        if (!StringUtils.hasText(patient.getEhrId())) {
+            throw new IllegalStateException("Patient has no EHR ID for prescription submission");
+        }
+
+        ehrBaseService.savePrescription(patient.getPatientId(), dto);
+
         Prescription prescription = Prescription.builder()
                 .patient(patient)
                 .doctor(doctor)

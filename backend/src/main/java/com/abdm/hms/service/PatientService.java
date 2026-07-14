@@ -6,6 +6,7 @@ import com.abdm.hms.exception.DuplicateResourceException;
 import com.abdm.hms.exception.ResourceNotFoundException;
 import com.abdm.hms.repository.PatientRepository;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,11 @@ public class PatientService {
         return toDto(findOrThrow(id));
     }
 
+    public Map<String, Object> getHistory(Long id) {
+        findOrThrow(id);
+        return ehrBaseService.getPatientHistory(id);
+    }
+
     public PatientDto create(PatientDto dto) {
 
         // Empty ABHA → null
@@ -51,15 +57,17 @@ public class PatientService {
                             + " already exists");
         }
 
-        // Save patient first
-        Patient saved = patientRepository.save(toEntity(dto));
-
-        // Create EHR in EHRbase
+        // Create EHR in EHRbase first so the patient row is only saved if the EHR exists.
         String ehrId = ehrBaseService.createEhr();
 
-        // Save ehrId into MySQL
-        saved.setEhrId(ehrId);
-        patientRepository.save(saved);
+        if (!StringUtils.hasText(ehrId)) {
+            throw new IllegalStateException("EHRbase did not return a valid EHR ID");
+        }
+
+        Patient patient = toEntity(dto);
+        patient.setEhrId(ehrId);
+
+        Patient saved = patientRepository.save(patient);
 
         System.out.println("=====================================");
         System.out.println("EHR CREATED SUCCESSFULLY");

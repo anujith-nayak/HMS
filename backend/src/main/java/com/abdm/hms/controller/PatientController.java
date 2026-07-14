@@ -2,6 +2,7 @@ package com.abdm.hms.controller;
 
 import com.abdm.hms.dto.PatientDto;
 import com.abdm.hms.service.PatientService;
+import java.util.Map;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,11 @@ public class PatientController {
     @GetMapping("/{id}")
     public PatientDto getById(@PathVariable Long id) {
         return patientService.getById(id);
+    }
+
+    @GetMapping("/{id}/history")
+    public Map<String, Object> getHistory(@PathVariable Long id) {
+        return patientService.getHistory(id);
     }
 
     @PostMapping
